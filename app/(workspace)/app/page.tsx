@@ -1,8 +1,5 @@
-import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
-import { getDashboardSnapshot } from "@/lib/services/workspace-service";
+import { DashboardClient } from "@/components/dashboard/dashboard-client";
 
-export default async function DashboardPage() {
-  const snapshot = await getDashboardSnapshot();
-
-  return <DashboardOverview snapshot={snapshot} />;
+export default function DashboardPage() {
+  return <DashboardClient />;
 }

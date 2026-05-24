@@ -1,44 +1,37 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Network, Search } from "lucide-react";
 
+import { useWorkspace } from "@/components/workspace/workspace-provider";
 import { loreEntryTypes, getLoreEntryTypeLabel } from "@/lib/database/lore-entry-types";
 import { exportLoreCsv, exportUniverseJson } from "@/lib/services/export-service";
 import { searchLoreEntries } from "@/lib/services/lore-service";
-import type { LoreEntry, LoreEntryType, Universe } from "@/lib/types/domain";
+import type { LoreEntryType } from "@/lib/types/domain";
 
 const allTypes = ["all", ...loreEntryTypes.map((type) => type.value)] as const;
 type FilterType = (typeof allTypes)[number];
 
-export function EncyclopediaDashboard({
-  initialEntries,
-  universes
-}: {
-  initialEntries: LoreEntry[];
-  universes: Universe[];
-}) {
-  const [entries, setEntries] = useState(initialEntries);
+export function EncyclopediaDashboard() {
+  const { state } = useWorkspace();
+  const universes = state.universes;
+  const entries = state.loreEntries;
+
   const [query, setQuery] = useState("");
   const [type, setType] = useState<FilterType>("all");
   const [universeId, setUniverseId] = useState(universes[0]?.id ?? "");
 
-  useEffect(() => {
-    const savedLore = window.localStorage.getItem("lorewrite:loreEntries");
-    if (savedLore) {
-      setEntries(JSON.parse(savedLore));
-    }
-  }, []);
+  const activeUniverseId = universeId || universes[0]?.id || "";
 
   const filteredEntries = useMemo(() => {
-    const searched = searchLoreEntries(entries, query, universeId);
+    const searched = searchLoreEntries(entries, query, activeUniverseId);
     return type === "all" ? searched : searched.filter((entry) => entry.type === type);
-  }, [entries, query, type, universeId]);
+  }, [entries, query, type, activeUniverseId]);
 
-  const selectedUniverse = universes.find((universe) => universe.id === universeId) ?? universes[0];
+  const selectedUniverse = universes.find((universe) => universe.id === activeUniverseId) ?? universes[0];
 
-  function download(filename: string, content: string, type: string) {
-    const blob = new Blob([content], { type });
+  function download(filename: string, content: string, mimeType: string) {
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -61,7 +54,10 @@ export function EncyclopediaDashboard({
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={() => selectedUniverse && download("lorewrite-encyclopedia.json", exportUniverseJson(selectedUniverse, filteredEntries), "application/json")}
+              onClick={() =>
+                selectedUniverse &&
+                download("lorewrite-encyclopedia.json", exportUniverseJson(selectedUniverse, filteredEntries), "application/json")
+              }
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--border)] px-4 py-3 text-sm font-semibold"
             >
               <Download className="size-4" />
@@ -89,7 +85,7 @@ export function EncyclopediaDashboard({
             />
           </label>
           <select
-            value={universeId}
+            value={activeUniverseId}
             onChange={(event) => setUniverseId(event.target.value)}
             className="rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3"
           >
@@ -104,10 +100,9 @@ export function EncyclopediaDashboard({
             onChange={(event) => setType(event.target.value as FilterType)}
             className="rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3"
           >
-            <option value="all">All entries</option>
-            {loreEntryTypes.map((entryType) => (
-              <option key={entryType.value} value={entryType.value}>
-                {entryType.label}
+            {allTypes.map((option) => (
+              <option key={option} value={option}>
+                {option === "all" ? "All types" : getLoreEntryTypeLabel(option as LoreEntryType)}
               </option>
             ))}
           </select>
@@ -115,45 +110,40 @@ export function EncyclopediaDashboard({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {filteredEntries.map((entry) => (
-          <article key={entry.id} className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
-                  {getLoreEntryTypeLabel(entry.type as LoreEntryType)}
-                </p>
-                <h2 className="mt-2 text-xl font-semibold">{entry.name}</h2>
-              </div>
-              <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs capitalize">{entry.canonStatus}</span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{entry.shortSummary}</p>
-            {entry.firstMention ? (
-              <div className="mt-4 rounded-2xl bg-[var(--background)] p-3 text-sm">
-                <p className="font-semibold">First mentioned</p>
-                <p className="mt-1 text-[var(--muted)]">
-                  {entry.firstMention.storyTitle} / {entry.firstMention.chapterTitle} / {entry.firstMention.sceneTitle}
-                </p>
-              </div>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {entry.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-[var(--background)] px-3 py-1 text-xs">
-                  {tag}
+        {filteredEntries.length === 0 ? (
+          <p className="text-sm text-[var(--muted)]">No lore entries yet. Create some from the writing editor.</p>
+        ) : (
+          filteredEntries.map((entry) => (
+            <article key={entry.id} className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+                    {getLoreEntryTypeLabel(entry.type)}
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold">{entry.name}</h2>
+                </div>
+                <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-semibold capitalize">
+                  {entry.canonStatus}
                 </span>
-              ))}
-            </div>
-          </article>
-        ))}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{entry.shortSummary || "No summary yet."}</p>
+              {entry.firstMention ? (
+                <p className="mt-4 text-xs text-[var(--muted)]">
+                  First mentioned in {entry.firstMention.storyTitle} / {entry.firstMention.chapterTitle}
+                </p>
+              ) : null}
+            </article>
+          ))
+        )}
       </section>
 
       <section className="rounded-3xl border border-dashed border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="flex items-start gap-3">
-          <Network className="mt-1 size-5 text-[var(--accent)]" />
+        <div className="flex items-center gap-3">
+          <Network className="size-6 text-[var(--accent)]" />
           <div>
             <h2 className="font-semibold">Relationship map placeholder</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Relationships are modeled in the database and lore entries store related entry IDs. A visual graph can be
-              added here without changing the underlying schema.
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Linked entries and relationship edges are modeled in the schema for a future graph view.
             </p>
           </div>
         </div>
