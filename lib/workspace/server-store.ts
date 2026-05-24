@@ -4,7 +4,9 @@ import path from "node:path";
 import { createDefaultWorkspaceState } from "@/lib/workspace/default-state";
 import type { WorkspaceState } from "@/lib/workspace/workspace-state";
 
-const workspaceFile = path.join(process.cwd(), "data", "workspace.json");
+const workspaceFile = process.env.VERCEL
+  ? path.join("/tmp", "lorewrite-workspace.json")
+  : path.join(process.cwd(), "data", "workspace.json");
 
 export async function readWorkspaceState(): Promise<WorkspaceState> {
   try {
