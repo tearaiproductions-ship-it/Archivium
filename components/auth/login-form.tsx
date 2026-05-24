@@ -119,6 +119,13 @@ export function LoginForm() {
         </button>
       </form>
 
+      <Link
+        href="/app"
+        className="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-[var(--border)] px-4 py-3 text-sm font-semibold"
+      >
+        Continue without sign-in (test mode)
+      </Link>
+
       {status ? (
         <div className="mt-5 rounded-2xl bg-[var(--background)] p-4 text-sm text-[var(--muted)]">{status}</div>
       ) : null}
