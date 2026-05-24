@@ -10,10 +10,10 @@ export function SiteHeader() {
         <span className="text-xl tracking-tight">LoreWrite</span>
       </Link>
       <nav className="hidden items-center gap-7 text-sm text-[var(--muted)] md:flex">
+        <a href="#product">Product</a>
         <a href="#features">Features</a>
         <a href="#pricing">Pricing</a>
-        <a href="#exports">Exports</a>
-      </nav>
+              </nav>
       <div className="flex items-center gap-3">
         <Link href="/login" className="rounded-full px-4 py-2 text-sm font-medium text-[var(--foreground)]">
           Sign in

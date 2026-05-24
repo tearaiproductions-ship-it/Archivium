@@ -39,7 +39,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </Link>
       </aside>
       <main className="pb-24 lg:pl-72">
-        <div className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:py-8">{children}</div>
+        <div className="mx-auto w-full max-w-[100rem] px-5 py-6 sm:px-8 lg:px-10 lg:py-8">{children}</div>
       </main>
     </div>
   );
