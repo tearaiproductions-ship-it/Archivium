@@ -8,7 +8,7 @@ const navigation = [
   { href: "/app/encyclopedia", label: "Encyclopedia", icon: Sparkles },
   { href: "/app/timeline", label: "Timeline", icon: Clock3 },
   { href: "/app/settings", label: "Settings", icon: Settings }
-];
+] as const;
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   return (
